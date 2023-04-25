@@ -1,0 +1,22 @@
+---
+authors: ["Julian Easterling <julian@julianscorner.com>"]
+build_ignore:
+  - README.md
+  - build.cmd
+  - .gitignore
+  - .vscode
+description: Runbook that will update the operating system and reboot if needed.
+homepage: https://github.com/dcjulian29/ansible-runbook-updateos
+issues: https://github.com/dcjulian29/ansible-runbook-updateos/issues
+license: ["Apache-2.0"]
+name: updateos
+namespace: dcjulian29
+readme: https://github.com/dcjulian29/ansible-runbook-updateos/blob/main/README.md
+repository: https://github.com/dcjulian29/ansible-runbook-updateos
+tags:
+  - updateos
+  - apk
+  - apt
+  - yum
+  - dnf
+version: 0.5.0

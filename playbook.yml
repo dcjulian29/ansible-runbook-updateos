@@ -1,0 +1,96 @@
+---
+- hosts: all
+  any_errors_fatal: true
+  become: true
+  name: Update operating system
+
+  vars:
+    reboot_enabled: true
+    reboot_msg: "System is going down to apply updates."
+    reboot_timeout: 600
+    reboot_forced: false
+
+  handlers:
+    - name: Reboot system
+      ansible.builtin.reboot:
+        msg: "{{ reboot_msg }}"
+        reboot_timeout: "{{ reboot_timeout }}"
+      when: reboot_enabled
+
+  tasks:
+    - name: Update APT packages
+      ansible.builtin.apt:
+        state: "{{ 'latest' }}"  # Yes, redundant, but necessary to not anger the lint gods...
+        autoclean: true
+        autoremove: true
+        update_cache: true
+        upgrade: dist
+      when: ansible_pkg_mgr == "apt"
+
+    - name: Ensure yum-utils package is installed
+      ansible.builtin.yum:
+        name: yum-utils
+        state: present
+      when: ansible_pkg_mgr == "apt"
+
+    - name: Update YUM packages
+      ansible.builtin.yum:
+        name: "*"
+        state: "{{ 'latest' }}"  # Yes, redundant, but necessary to not anger the lint gods...
+        update_cache: true
+      when: ansible_pkg_mgr == "yum"
+
+    - name: Ensure Tracer package is installed
+      ansible.builtin.dnf:
+        name: tracer
+        state: present
+
+    - name: Update DNF packages
+      ansible.builtin.dnf:
+        name: "*"
+        state: "{{ 'latest' }}"  # Yes, redundant, but necessary to not anger the lint gods...
+        update_cache: true
+      changed_when: false
+      when: ansible_pkg_mgr == "dnf"
+
+    - name: Update APK packages
+      community.general.apk:
+        name: "*"
+        state: "{{ 'latest' }}"  # Yes, redundant, but necessary to not anger the lint gods...
+        update_cache: true
+      changed_when: false
+      when: ansible_pkg_mgr == "apk"
+
+    - name: Check if system reboot is needed for APT and APK based systems
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+      register: updateos_reboot_check
+      ignore_errors: true
+      changed_when: updateos_reboot_check.stat.exists or reboot_forced
+      when:
+        - reboot_enabled or reboot_forced
+        - ansible_pkg_mgr == "apt" or ansible_pkg_mgr == "apk"
+      notify: Reboot system
+
+    - name: Check if system reboot is needed for YUM based systems
+      ansible.builtin.command: needs-restarting -r
+      ignore_errors: true
+      register: updateos_reboot_check
+      changed_when: updateos_reboot_check.rc == 1 or reboot_forced
+      failed_when: updateos_reboot_check.rc != 1 and updateos_reboot_check.rc != 0
+      when:
+        - reboot_enabled or reboot_forced
+        - ansible_pkg_mgr == "yum"
+      notify: Reboot system
+
+    - name: Check if system reboot is needed for DNF based systems
+      ansible.builtin.command: tracer
+      ignore_errors: true
+      register: updateos_reboot_check
+      changed_when: updateos_reboot_check.stdout.find('reboot') != -1 or
+                reboot_forced
+      failed_when: updateos_reboot_check.stdout.find('unsupported') != -1
+      when:
+        - reboot_enabled or reboot_forced
+        - ansible_pkg_mgr == "dnf"
+      notify: Reboot system

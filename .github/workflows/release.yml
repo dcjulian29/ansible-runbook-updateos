@@ -1,0 +1,51 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "*"
+
+  workflow_dispatch:
+
+jobs:
+  release:
+    if: startsWith(github.ref, 'refs/heads/main')
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3
+
+      - run: |
+          python3 -m pip install pip
+          pip3 install ansible
+          ansible-galaxy collection build
+
+      - uses: actions/create-release@v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release v${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - id: create_release
+        uses: actions/upload-artifact@v2
+        with:
+          name: dcjulian29.updateos
+          path: dcjulian29-updateos-${{ github.ref }}.tar.gz
+
+      - uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: dcjulian29-updateos-${{ github.ref }}.tar.gz
+          asset_name: dcjulian29.updateos
+          asset_content_type: application/octet-stream
