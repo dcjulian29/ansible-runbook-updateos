@@ -16,12 +16,18 @@ To use, use `requirements.yml` with the following git source:
 ---
 collections:
 - name: dcjulian29.updateos
-  src: https://github.com/dcjulian29/ansible-runbook-updateos.git
-  version: main
+  type: git
+  source: https://github.com/dcjulian29/ansible-runbook-updateos.git
   ```
 
 Then download it with `ansible-galaxy`:
 
 ```shell
 ansible-galaxy collection install -r requirements.yml
+```
+
+To excute the runbook:
+
+```shell
+ansible-playbook dcjulian29.updateos.runbook.yml
 ```
