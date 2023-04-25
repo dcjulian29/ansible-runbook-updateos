@@ -26,14 +26,11 @@ jobs:
       - id: vars
         run: echo "version=$(echo ${GITHUB_REF} | cut -d / -f 3)" >> $GITHUB_OUTPUT
 
-      - uses: actions/create-release@v1.0.0
+      - uses: elgohr/Github-Release-Action@v4
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
         with:
-          tag_name: ${{ steps.vars.outputs.version }}
-          release_name: Release v${{ steps.vars.outputs.version }}
-          draft: false
-          prerelease: false
+          title: ${{ steps.vars.outputs.version }}
 
       - id: create_release
         uses: actions/upload-artifact@v2
@@ -43,7 +40,7 @@ jobs:
 
       - uses: actions/upload-release-asset@v1.0.1
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: dcjulian29-updateos-${{ steps.vars.outputs.version }}.tar.gz
