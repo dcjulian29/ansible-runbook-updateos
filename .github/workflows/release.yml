@@ -2,13 +2,12 @@ name: Release
 
 on:
   push:
-    branches:
-      - main
     tags:
       - "[0-9]*"
 
 jobs:
   release:
+    if: startsWith(github.ref, 'refs/heads/main')
     runs-on: ubuntu-latest
 
     steps:
