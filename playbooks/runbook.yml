@@ -31,7 +31,7 @@
       ansible.builtin.yum:
         name: yum-utils
         state: present
-      when: ansible_pkg_mgr == "apt"
+      when: ansible_pkg_mgr == "yum"
 
     - name: Update YUM packages
       ansible.builtin.yum:
@@ -44,6 +44,7 @@
       ansible.builtin.dnf:
         name: tracer
         state: present
+      when: ansible_pkg_mgr == "dnf"
 
     - name: Update DNF packages
       ansible.builtin.dnf:
@@ -64,9 +65,9 @@
     - name: Check if system reboot is needed for APT and APK based systems
       ansible.builtin.stat:
         path: /var/run/reboot-required
-      register: updateos_reboot_check
+      register: reboot_check
       ignore_errors: true
-      changed_when: updateos_reboot_check.stat.exists or reboot_forced
+      changed_when: reboot_check.stat.exists or reboot_forced
       when:
         - reboot_enabled or reboot_forced
         - ansible_pkg_mgr == "apt" or ansible_pkg_mgr == "apk"
@@ -75,9 +76,9 @@
     - name: Check if system reboot is needed for YUM based systems
       ansible.builtin.command: needs-restarting -r
       ignore_errors: true
-      register: updateos_reboot_check
-      changed_when: updateos_reboot_check.rc == 1 or reboot_forced
-      failed_when: updateos_reboot_check.rc != 1 and updateos_reboot_check.rc != 0
+      register: reboot_check
+      changed_when: reboot_check.rc == 1 or reboot_forced
+      failed_when: reboot_check.rc != 1 and reboot_check.rc != 0
       when:
         - reboot_enabled or reboot_forced
         - ansible_pkg_mgr == "yum"
@@ -86,10 +87,9 @@
     - name: Check if system reboot is needed for DNF based systems
       ansible.builtin.command: tracer
       ignore_errors: true
-      register: updateos_reboot_check
-      changed_when: updateos_reboot_check.stdout.find('reboot') != -1 or
-                reboot_forced
-      failed_when: updateos_reboot_check.stdout.find('unsupported') != -1
+      register: reboot_check
+      changed_when: _reboot_check.stdout.find('reboot') != -1 or reboot_forced
+      failed_when: reboot_check.stdout.find('unsupported') != -1
       when:
         - reboot_enabled or reboot_forced
         - ansible_pkg_mgr == "dnf"
