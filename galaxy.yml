@@ -20,8 +20,7 @@ readme: https://github.com/dcjulian29/ansible-runbook-updateos/blob/main/README.
 repository: https://github.com/dcjulian29/ansible-runbook-updateos
 tags:
   - updateos
-  - apk
   - apt
   - yum
   - dnf
-version: 0.9.0
+version: 0.9.1

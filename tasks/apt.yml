@@ -1,0 +1,17 @@
+---
+- name: Update packages
+  ansible.builtin.apt:
+    state: "{{ 'latest' }}"  # Yes, redundant, but necessary to not anger the lint gods...
+    autoclean: true
+    autoremove: true
+    update_cache: true
+    upgrade: dist
+
+- name: Check if system reboot is needed
+  ansible.builtin.stat:
+    path: /var/run/reboot-required
+  register: reboot_check
+  ignore_errors: true
+  changed_when: reboot_check.stat.exists or reboot_forced
+  when: reboot_enabled or reboot_forced
+  notify: Reboot system

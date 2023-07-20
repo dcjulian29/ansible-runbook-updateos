@@ -1,0 +1,21 @@
+---
+- name: Ensure yum-utils package is installed
+  ansible.builtin.yum:
+    name: yum-utils
+    state: present
+
+- name: Update packages
+  ansible.builtin.yum:
+    name: "*"
+    state: "{{ 'latest' }}"  # Yes, redundant, but necessary to not anger the lint gods...
+    update_cache: true
+
+- name: Check if system reboot is needed
+  ansible.builtin.command: needs-restarting -r
+  ignore_errors: true
+  register: reboot_check
+  changed_when: reboot_check.rc == 1 or reboot_forced
+  failed_when: reboot_check.rc != 1 and reboot_check.rc != 0
+  when:
+    - reboot_enabled or reboot_forced
+  notify: Reboot system
