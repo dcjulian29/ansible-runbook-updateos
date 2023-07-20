@@ -1,6 +1,6 @@
 name: Build
 
-on:
+'on':
   push:
     paths:
       - "*.yml"
@@ -13,7 +13,6 @@ on:
 
 jobs:
   build:
-    if: startsWith(github.ref, 'refs/heads/main')
     runs-on: ubuntu-latest
 
     steps:
@@ -30,4 +29,4 @@ jobs:
           pip3 install ansible ansible-lint yamllint
           ansible-galaxy collection install community.general
 
-      - run: ansible-lint
+      - run: ansible-lint .
